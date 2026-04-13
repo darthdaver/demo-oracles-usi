@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.demo.test.oracles</groupId>
+    <artifactId>demo-test-oracles</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <evosuiteVersion>1.0.6</evosuiteVersion>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version> <!-- Replace with the latest version -->
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.javaparser</groupId>
+            <artifactId>javaparser-symbol-solver-core</artifactId>
+            <version>3.25.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.evosuite</groupId>
+            <artifactId>evosuite-standalone-runtime</artifactId>
+            <version>${evosuiteVersion}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.32</version> <!-- or the latest version available -->
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.6</version> <!-- or the latest version available -->
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.evosuite.plugins</groupId>
+                    <artifactId>evosuite-maven-plugin</artifactId>
+                    <version>${evosuiteVersion}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal> prepare </goal>
+                            </goals>
+                            <phase> process-test-classes </phase>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <extraArgs> -Duse_separate_classloader=false </extraArgs>
+                    </configuration>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>8</source> <!-- Java version compatibility -->
+                    <target>8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <!-- Specify the main class here if your JAR is executable -->
+                            <mainClass>org.demo.test.oracles.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.constructor.assignment.Main</mainClass> <!-- Specify your main class here -->
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <propertyName>surefireArgLine</propertyName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.15</version>
+                <configuration>
+                    <testFailureIgnore>true</testFailureIgnore>
+                    <argLine>${surefireArgLine}</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>1.14.2</version>
+                <dependencies>
+                    <!--                    We need this plugin if we're using JUnit 5-->
+                    <!--                    <dependency>-->
+                    <!--                        <groupId>org.pitest</groupId>-->
+                    <!--                        <artifactId>pitest-junit5-plugin</artifactId>-->
+                    <!--                        <version>1.2.1</version>-->
+                    <!--                    </dependency>-->
+                </dependencies>
+                <configuration>
+                    <!--                    Mutation threshold defines the percentage of mutations that should be eliminated-->
+                    <!--                    <mutationThreshold>100</mutationThreshold>-->
+                    <failWhenNoMutations>false</failWhenNoMutations>
+                    <!--                    defines which classes will be mutated, please pay attention to the * at the end! -->
+                    <targetClasses>
+                        <param>org.constructor.assignment*</param>
+                    </targetClasses>
+                    <!--                    defines which tests will be executed, please pay attention to the * at the end! -->
+                    <targetTests>
+                        <param>org.constructor.assignment.!(*Failed*)</param>
+                    </targetTests>
+                    <threads>8</threads>
+                    <!--                    <maxMutationsPerClass>20</maxMutationsPerClass>-->
+                    <!--                    mutators defines the list if mutators to apply, we can define individual ones, or pass in a one of the group names (OLD/DEFAULTS/DEFAULTS/STRONGER/ALL)-->
+                    <!--                    <mutators>-->
+                    <!--                        <mutator>-->
+                    <!--                            ALL-->
+                    <!--                        </mutator>-->
+                    <!--                        vs-->
+                    <!--                        <mutator>-->
+                    <!--                            INVERT_NEGS-->
+                    <!--                        </mutator>-->
+                    <!--                        <mutator>-->
+                    <!--                            MATH-->
+                    <!--                        </mutator>-->
+                    <!--                    </mutators>-->
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>mutationCoverage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
